@@ -1,0 +1,263 @@
+Project Proposal — “Castled” (Java Chess AI & Online Play)
+1) Concept & Goals
+
+Concept: Build a web-based chess platform with a Java engine that plays at configurable strengths. Phase 1 focuses on a robust single-player experience vs. the AI. Phase 2 adds real-time multiplayer (play and spectate) using WebSockets.
+
+Primary goals
+
+Deliver a correct, fast, and configurable chess AI (opening → midgame → endgame).
+
+Provide a clean, responsive web UI fully in Java.
+
+Add real-time multiplayer with matchmaking, rooms, clocks, and spectating.
+
+Out of scope (initially)
+
+Ratings/leaderboards, anti-cheat, mobile apps, NNUE/ML training.
+
+2) Target Users & Value
+
+Learners & casual players: Play vs. adjustable AI; see evaluation/PV lines.
+
+Friends/clubs: Create private rooms to play or spectate matches.
+
+Developers/enthusiasts: Clean modular Java codebase for tinkering.
+
+3) Phased Scope
+Phase 1 — Single-Player vs AI (Core)
+
+Correct rules, legal move generation, check/checkmate/stalemate draws.
+
+Alpha-beta search with iterative deepening, quiescence, transposition table.
+
+Time/depth controls, evaluation bar, principal variation display.
+
+Web UI with interactive board, clocks, move list, FEN load/save, PGN export.
+
+Deliverables
+
+Playable web app vs AI.
+
+Engine passes perft test suite to depth 5–6 on standard positions.
+
+Containerized service with basic observability (logs/metrics).
+
+Phase 2 — Multiplayer & Spectating (WebSockets)
+
+Matchmaking (quick play) + private rooms (link-based).
+
+Real-time move relay, clocks with increment, resign/draw.
+
+Spectator mode: multiple viewers per game; live move/eval stream.
+
+Basic anti-abuse (rate limits, session caps), reconnection handling.
+
+Deliverables
+
+Live multiplayer with stable WebSocket channels.
+
+Spectator view with move/eval stream.
+
+Game persistence (PGN), simple user accounts (optional in v2).
+
+4) Technology Stack (all Java-first)
+
+Language: Java 21 (LTS).
+
+Build: Gradle (or Maven).
+
+Engine: Pure Java library module (engine).
+
+Backend API: Spring Boot (REST + WebSocket), alternative Micronaut/Javalin ok.
+
+Frontend (web, Java-only): Vaadin Flow (server-driven UI rendering to HTML/JS).
+
+Persistence: PostgreSQL for games/users (Phase 2), in-memory store for Phase 1.
+
+Caching: Caffeine (local) → Redis (Phase 2 scaling).
+
+Deploy: Docker image; run on any cloud (Fly.io/Render/AWS/GCP).
+
+Observability: SLF4J logs, Micrometer metrics, health checks.
+
+5) High-Level Architecture
+
+Monorepo, multi-module:
+
+engine/ — chess rules, move gen, search, evaluation, FEN/PGN.
+
+server/ — Spring Boot app: REST for turn actions, WebSocket for live events.
+
+ui/ — Vaadin app: board, clocks, eval bar, controls, spectating views.
+
+common/ — shared DTOs (GameState, Move, ClockUpdate), validation, error model.
+
+Runtime topology (Phase 1): Single process (engine in-process for low latency).
+Phase 2: Option to scale horizontally; stick sessions or shared state via Redis.
+
+6) Core Features & Requirements
+Functional (Phase 1)
+
+Start new game (optional FEN), choose side/difficulty/time.
+
+Make/validate moves, AI replies within budget (time or depth).
+
+Show move list (SAN), evaluation bar, PV line, check indicators.
+
+Export PGN; detect end states (mate, stalemate, 50-move, threefold, insufficient material).
+
+Functional (Phase 2)
+
+Create/join match (public/room), side selection, time controls.
+
+Real-time updates over WebSockets (moves, clocks, resign/draw).
+
+Spectating: live board, move list, eval bar (optional), chat (optional, later).
+
+Persistence: store game records; simple accounts (email/password or magic link).
+
+Non-Functional
+
+Correctness: perft parity on reference positions before search goes live.
+
+Latency: <100 ms server processing per human move; AI time per budget.
+
+Stability: graceful time cutoffs; safe WebSocket reconnect.
+
+Security: input validation, CSRF (REST), auth for multiplayer rooms, basic rate limiting.
+
+Observability: depth, nodes/s, TT hit rate, REST/WebSocket metrics.
+
+7) APIs (conceptual, no code)
+
+REST (Phase 1)
+
+POST /api/game → create game (color, FEN, time/depth budget).
+
+GET /api/game/{id} → game state (board, side, clocks, legal moves if desired).
+
+POST /api/game/{id}/move → apply human move; engine may respond.
+
+POST /api/game/{id}/bestmove → analysis mode (returns PV/score).
+
+GET /api/game/{id}/pgn → export PGN.
+
+WebSocket (Phase 2)
+
+Channels: /ws/game/{id}.
+
+Server → client events: state, move, clock, result, spectators, eval (optional).
+
+Client → server events: join, move, offerDraw, resign, sync (reconnect).
+
+Message fields (examples)
+
+move: { from, to, promo?, san, fenAfter, clocks }
+
+state: { boardFEN, sideToMove, legalHints?, lastMove?, inCheck? }
+
+eval (optional to spectators): { depth, scoreCp|mateIn, pv: [moves...] }
+
+8) Data Model (minimum viable)
+
+Game: id, FEN start, moves (SAN/lan), PGN, result, timestamps, time control.
+
+Player (Phase 2): id, displayName (or anonymous), auth token/session.
+
+Room/Match: id, gameId, whiteId, blackId, spectators[], status.
+
+9) Testing Strategy
+
+Engine correctness: Perft suite, edge-case unit tests (castling under attack, en passant, promotions, repetition).
+
+Search: Fixed-depth test positions (mate in N), stability on aspiration/null-move.
+
+API: Contract tests for new game/move/best move; invalid input handling.
+
+WebSocket: Simulated dual clients, reconnection, ordering guarantees.
+
+UI e2e: Drag-drop flow, illegal-move feedback, clocks, result display.
+
+10) Delivery Plan & Milestones
+
+M0 – Setup (Week 1)
+
+Repo, modules, CI, formatting/linting, Docker baseline.
+
+M1 – Rules Engine (Weeks 2–4)
+
+Board/state, legal move gen, checks/draws, FEN/PGN; pass perft to d5–6.
+
+M2 – Search & Eval (Weeks 5–7)
+
+Alpha-beta, iterative deepening, TT, quiescence, basic eval, time control.
+
+Observability: depth, nodes/s, TT hit rate.
+
+M3 – Single-Player UI & REST (Weeks 8–9)
+
+Vaadin board, move list, eval bar, controls; REST glue; PGN export.
+
+M4 – Hardening & Release v1 (Week 10)
+
+Performance passes, bugfixes, container image, basic metrics & health checks.
+
+M5 – WebSockets & Multiplayer (Weeks 11–13)
+
+Matchmaking/rooms, real-time play, clocks, spectating, reconnection.
+
+M6 – Persistence & v2 Release (Week 14)
+
+DB schema for games/rooms; retention policies; basic user accounts (optional).
+
+(Timelines are indicative; adjust to team size.)
+
+11) Risks & Mitigations
+
+Engine bugs → Strict perft gates before search. Incremental make/unmake.
+
+Search time spikes → Hard cutoff checks; safe abort; aspiration window tuning.
+
+WebSocket scale → Back-pressure, message batching, Redis pub/sub if multi-node.
+
+State divergence (UI vs server) → Server as single source of truth; idempotent moves.
+
+12) Success Metrics
+
+Engine: Perft parity; depth achieved under fixed budgets; TT hit rate.
+
+UX: <150 ms perceived latency for human moves (ex-AI time); <1% dropped WS sessions in 30 min games.
+
+Engagement: Average session length; % games completed; spectator minutes.
+
+13) Roadmap Beyond v2 (nice-to-haves)
+
+Opening book (Polyglot), Syzygy endgame tablebases.
+
+Multi-PV analysis mode.
+
+User accounts with ELO, leaderboards.
+
+Puzzles from real games.
+
+Cloud scaling with autoscaling & Redis for shared state.
+
+Optional NNUE integration (longer-term).
+
+14) Acceptance Criteria (Phase 1 → Phase 2)
+
+Phase 1 “Done”
+
+Can start a game vs AI, play to result, export PGN.
+
+Engine passes perft suite; AI respects time/depth; logs PV/score per move.
+
+CI green; Docker image deployable; health endpoint up.
+
+Phase 2 “Done”
+
+Two browsers can join a room and complete a timed game.
+
+Spectators can watch with live moves and clocks (and optional eval).
+
+Reconnect works; basic abuse/rate limiting in place; games persisted.
