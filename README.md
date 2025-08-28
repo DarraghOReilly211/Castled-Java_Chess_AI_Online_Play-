@@ -24,3 +24,6 @@ A web-based chess platform with a Java engine that plays at configurable strengt
 
 ### Common: 
     Contains Data Transfer Object, error model, validation annotations/specs, version constants.
+
+### Documents:
+    This will contain PDF's of my thought process and developement ideas.
