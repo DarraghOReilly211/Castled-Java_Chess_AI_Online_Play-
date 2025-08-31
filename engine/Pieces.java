@@ -49,6 +49,7 @@ public class Pieces {
                 - Use enums instead of Strings for piece names and colors avoids my bad spelling and makes string comparison easier.
                 -Try to correct piece generation so it will follow a spefic order.
                 -Advice via code review with colaboratror Stawwin
+                -Had to take a break today due to being sick, more real updates tomorrow 
 
             Next: Set up method for piece movement, and rules per group.
             
