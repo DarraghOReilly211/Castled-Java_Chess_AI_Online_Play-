@@ -53,7 +53,7 @@ public class Pieces {
 
             Next: Set up method for piece movement, and rules per group.
             
-            Note: couldn't do work today as I was under the weather. I will continue tomorrow.
+            Note: couldn't do work today as I was under the weather. I will try continue tomorrow.
         */
 
         String color = "white";
