@@ -12,12 +12,15 @@ public class Pieces {
         WHITE, BLACK
     }
 
+    public List<String> history = new ArrayList<String>();
+
     public static class Piece {
         // Everything is immutable except position which is the bit that moves.
         private final String id;
         private final PieceType type;
         private final PieceColor color;
         private Board position;
+        private List<Board> validMoves;
 
         // Initialise piece and track its location.
         private Piece(PieceType type, PieceColor color, String id, Board position) {
@@ -59,6 +62,52 @@ public class Pieces {
         }
     }
 
+    public List<Board> calculateValidMoves(Piece piece, Board[][] board) {
+        List<Board> validMoves = new ArrayList<>();
+            for (int r = 0; r < 8; r++) {
+                for (int c = 0; c < 8; c++) {
+                    System.out.println(board[r][c].piece);
+                }
+            }
+
+        return validMoves;
+    }
+
+
+    private static Piece movePiece(Piece piece, Board newPosition) {
+        int limit;
+        // Update the piece's position.
+        switch (piece.type) {
+            case PAWN:
+                if (piece.position.toString().contains("2") || piece.position.toString().contains("7")) {
+                    limit = 2;
+                } else {
+                    limit = 1;
+                }
+                break;
+            case KNIGHT:
+                limit = 3;
+                break;
+            case BISHOP:
+                limit = 10;
+                break;
+            case ROOK:
+                limit = 10;
+                break;
+            case QUEEN:
+                limit = 10;
+                break;
+            case KING:
+                limit = 1;
+                break;
+            default:
+                limit = 0;
+        }
+        piece.setPosition(newPosition);
+        return piece;
+        
+    }
+
     // Entry point just builds a fresh board and drops all pieces in standard order.
     public static void main(String[] args) {
 
@@ -68,11 +117,13 @@ public class Pieces {
 
         // Sanity: build board and peek at squares.
         Board[][] board = Board.createBoard();
-        for (int r = 0; r < 8; r++) {
-            for (int c = 0; c < 8; c++) {
-                System.out.println(board[r][c].name + " " + board[r][c].colour + " " + board[r][c].occupied);
-            }
-        }
+        // Debug: print out the board squares to verify creation.
+        // Uncomment to see the board squares
+        // for (int r = 0; r < 8; r++) {
+        //     for (int c = 0; c < 8; c++) {
+        //         System.out.println(board[r][c].name + " " + board[r][c].colour + " " + board[r][c].occupied);
+        //     }
+        // }
 
         // Drop all pieces in a standard chess layout (no more map iteration randomness).
         for (PieceColor color : PieceColor.values()) {
@@ -136,9 +187,12 @@ public class Pieces {
 
         // Quick dump of the board to confirm everything landed where it should.
         for (Board[] row : board) {
+            System.out.println();
+            System.out.print("|");
             for (Board square : row) {
-                System.out.println(square.name + " " + square.colour + " " + square.occupied + " " + square.piece);
+                System.out.print((square.piece != null ? square.piece : "empty") + "\t|");
             }
         }
+        System.out.println();
     }
 }
