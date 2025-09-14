@@ -28,5 +28,5 @@ A web-based chess platform with a Java engine that plays at configurable strengt
 ### Documents:
     This will contain PDF's of my thought process and developement ideas.
 
-## Test for readme.md
+# Test for readme.md
 
