@@ -51,4 +51,11 @@ public class Board {
     public static void main(String[] args){
         
     }
+    // TODO Change board set up, after some research Ive decided to changes to the bitBoard method.
+    // Since a chess board is 8x8 we can use a 64 bit long to represent the board.
+    // Each piece type will have its own bitboard, so we can have a bitboard
+    // Then I can use bitwise operations to calculate valid moves.
+    // This will be much faster than using a 2D array and iterating through it.
+    // More info here: https://www.chessprogramming.org/Bitboards
+    // https://www.chessprogramming.org/Sliding_Piece_Attacks#Magic_Bitboards
 }
